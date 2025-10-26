@@ -1,0 +1,72 @@
+@startuml
+skinparam classAttributeIconSize 0
+title Správa pronájmu bytů – doménový model
+
+class Pronajimatel {
+  +id: INT
+  +jmeno: String
+  +kontakt: String
+  --
+  +pocetBytu(): INT
+}
+
+class Byt {
+  +id: INT
+  +velikost_m2: FLOAT
+  +poloha: String
+  +vybaveni: String
+  +stav: StavBytu  <<derived>>  // 'volny'|'pronajaty' на основе активных smluv
+  --
+  +jeVolny(): Boolean
+}
+
+enum StavBytu {
+  volny
+  pronajaty
+}
+
+class Najemnik {
+  +id: INT
+  +jmeno: String
+  +kontakt: String
+  --
+  +maAktivniSmlouvu(): Boolean
+}
+
+class Smlouva {
+  +id: INT
+  +datum_zacatku: Date
+  +datum_konce: Date
+  +podminky: Text
+  --
+  +jeAktivni(k: Date): Boolean
+  +saldoK(k: Date): DECIMAL  // сумма начислений - оплаты
+}
+
+class Platba {
+  +id: INT
+  +datum_platby: Date
+  +castka: DECIMAL
+  +status: StatusPlatby
+  --
+  +jePoSplatnosti(k: Date): Boolean
+}
+
+enum StatusPlatby {
+  zaplaceno
+  neuhrazeno
+}
+
+Pronajimatel "1" -- "0..*" Byt : PRONAJÍMÁ >
+Byt "1" -- "0..*" Smlouva : OBSAHUJE >
+Najemnik "1" -- "0..*" Smlouva : UZAVŘEL >
+Smlouva "1" -- "1..*" Platba : PATŘÍ_KE_SMLOUVĚ >
+
+note top of Byt
+  Každý byt má v čase nejvýše 1 aktivní smlouvu
+end note
+
+note bottom of Najemnik
+  Nájemník může mít v čase nejvýše 1 aktivní smlouvu
+end note
+@enduml
